@@ -1,0 +1,12 @@
+# Ignore large data files
+data/
+*.nii
+*.nii.gz
+*.zip
+
+# MATLAB temp files
+*.asv
+*.m~
+
+# OS files
+.DS_Store
