@@ -1,12 +1,18 @@
 # Ignore large data files
 data/
+data-adolescent/
 *.nii
 *.nii.gz
 *.zip
 
+output/
+
 # MATLAB temp files
 *.asv
 *.m~
+
+# Python temp files
+__pycache__/
 
 # OS files
 .DS_Store
