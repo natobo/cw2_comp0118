@@ -1,9 +1,5 @@
 # Ignore large data files
-data/
 data-adolescent/
-*.nii
-*.nii.gz
-*.zip
 
 output/
 
