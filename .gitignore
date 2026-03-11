@@ -1,7 +1,6 @@
 # Ignore large data files
 data-adolescent/
 output/
-T2_matlab_material/
 
 # MATLAB temp files
 *.asv
