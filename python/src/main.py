@@ -10,25 +10,28 @@ SEG_PLOTS_DIR = output.get_dir("seg_plots")
 
 
 def main():
-    for id in data.get_ids():
+    for id in data.get_ids()[:3]:
         dataset = data.load_dataset(id)
         make_visualizations(dataset)
 
 
 def make_visualizations(dataset):
     output_dir = output.get_dir(dataset.id)
+    echo_times = data.get_echo_times()
 
-    make_z_volume_video(dataset, 20, output_dir)
-    make_z_volume_video(dataset, 25, output_dir)
-    make_z_volume_video(dataset, 30, output_dir)
+    make_z_volume_video(dataset, 20, output_dir, echo_times)
+    make_z_volume_video(dataset, 25, output_dir, echo_times)
+    make_z_volume_video(dataset, 30, output_dir, echo_times)
 
-    make_segment_plots(dataset, output_dir, data.get_echo_times())
+    make_segment_plots(dataset, output_dir, echo_times)
 
 
-def make_z_volume_video(dataset, z, output_dir):
+def make_z_volume_video(dataset, z, output_dir, echo_times=None):
     """Creates a video of the readings over a slice over time."""
     volume_video = video.make_from_volume(
-        dataset.reg[..., z, :], f"id={dataset.id}, z={z} volume"
+        dataset.reg[..., z, :],
+        f"id={dataset.id}, z={z} volume",
+        echo_times=echo_times,
     )
     # Save in two places for easier comparison between datasets.
     volume_video.save(output_dir / f"volume_z_{z}.mp4")
