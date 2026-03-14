@@ -7,6 +7,20 @@ import video
 
 VOLUMES_DIR = output.get_dir("volumes")
 SEG_PLOTS_DIR = output.get_dir("seg_plots")
+SEGMENT_NAMES = [
+    "Unassigned",
+    "Extra-CSF",
+    "GM",
+    "WM",
+    "Deep GM",
+    "Brainstem+Pons",
+]
+
+
+def format_segment_label(seg_id):
+    if 0 <= seg_id < len(SEGMENT_NAMES):
+        return f"Segment {seg_id} ({SEGMENT_NAMES[seg_id]})"
+    return f"Segment {seg_id} (Unknown-{seg_id})"
 
 
 def main():
@@ -40,28 +54,45 @@ def make_z_volume_video(dataset, z, output_dir, echo_times=None):
 
 
 def make_segment_plots(dataset, output_dir, echo_times):
-    """Plots average reading per segment over time."""
-    width, height, depth, time_steps = dataset.reg.shape
+    """Plot segment-wise mean signal intensity over echo times."""
+    _, _, _, time_steps = dataset.reg.shape
     segment_count = dataset.seg.shape[3]
 
-    plt.figure()
+    fig, ax = plt.subplots(figsize=(8, 5))
+
+    plotted = 0
     for seg_id in range(segment_count):
-        curve = []
+        curve = np.zeros(time_steps, dtype=float)
         # Scale by the total presence of the segment.
-        scale = np.sum(dataset.seg[..., seg_id])
+        scale = float(np.sum(dataset.seg[..., seg_id]))
+        if scale <= 0:
+            continue
+
         for step in range(time_steps):
-            curve.append(
+            curve[step] = (
                 np.tensordot(dataset.seg[..., seg_id], dataset.reg[..., step], axes=3)
                 / scale
             )
-        plt.semilogy(echo_times[: len(curve)], curve, label=seg_id)
 
-    plt.legend()
-    plt.suptitle(f"id={dataset.id}, reading per segment (log y-axis)")
+        x = np.asarray(echo_times[: len(curve)], dtype=float)
+        label = format_segment_label(seg_id)
+        ax.plot(x, curve, marker="o", linewidth=1.8, markersize=4, label=label)
+        plotted += 1
+
+    ax.set_title("Signal Intensity by Segment Over Echo Time")
+    ax.set_xlabel("Echo Time (ms)")
+    ax.set_ylabel("Mean Segment Signal Intensity")
+    ax.grid(True, alpha=0.3, linestyle="--")
+
+    if plotted > 0:
+        ax.legend(fontsize=8, ncol=2)
+
+    fig.suptitle(f"id={dataset.id}", fontsize=13)
+    fig.tight_layout()
     # Save in two places for easier comparison between datasets.
-    plt.savefig(output_dir / "seg_plots", bbox_inches="tight")
-    plt.savefig(SEG_PLOTS_DIR / str(dataset.id), bbox_inches="tight")
-    plt.close()
+    fig.savefig(output_dir / "seg_plots", bbox_inches="tight")
+    fig.savefig(SEG_PLOTS_DIR / str(dataset.id), bbox_inches="tight")
+    plt.close(fig)
 
 
 if __name__ == "__main__":
